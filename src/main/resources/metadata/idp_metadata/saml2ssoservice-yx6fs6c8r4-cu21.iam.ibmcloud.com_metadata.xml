@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?><md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://saml2ssoservice-yx6fs6c8r4-cu21.iam.ibmcloud.com/idaas/mtfim/sps/idaas/saml20">
+<md:SPSSODescriptor WantAssertionsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+<md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</md:NameIDFormat>
+<md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://saml2ssoservice-yx6fs6c8r4-cu21.iam.ibmcloud.com/idaas/mtfim/sps/idaas/saml20/login" index="1" isDefault="true"/>
+</md:SPSSODescriptor>
+<md:Organization>
+<md:OrganizationName xml:lang="en">saml2ssoservice-yx6fs6c8r4-cu21.iam.ibmcloud.com</md:OrganizationName>
+<md:OrganizationDisplayName xml:lang="en">saml2ssoservice-yx6fs6c8r4-cu21.iam.ibmcloud.com</md:OrganizationDisplayName>
+<md:OrganizationURL xml:lang="en"/>
+</md:Organization>
+</md:EntityDescriptor>
