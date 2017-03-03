@@ -3,7 +3,6 @@ package com.vdenotaris.spring.boot.security.saml.web;
 import org.opensaml.Configuration;
 import org.opensaml.xml.security.BasicSecurityConfiguration;
 import org.opensaml.xml.signature.SignatureConstants;
-import org.springframework.beans.factory.InitializingBean;
 
 public class SAMLConfigurationBean {
 	private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.SHA256;
