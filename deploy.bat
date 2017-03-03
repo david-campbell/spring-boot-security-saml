@@ -1,5 +1,5 @@
 cd \
-cd C:\spring-boot-security-saml-sample-master
+cd C:\Users\CampbellD\git\spring-boot-security-saml
 call mvn clean
 call mvn package -U
 cd target
