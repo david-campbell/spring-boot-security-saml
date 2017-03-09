@@ -221,8 +221,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         //ASK FOR THE DETALS
         String storePass = "nalle123";
         Map<String, String> passwords = new HashMap<String, String>();
-        passwords.put("apollo", "nalle123");
-        String defaultKey = "apollo";
+       
+        String defaultKey = "adfssigning3";
         return new JKSKeyManager(storeFile, storePass, passwords, defaultKey);
     }
  
