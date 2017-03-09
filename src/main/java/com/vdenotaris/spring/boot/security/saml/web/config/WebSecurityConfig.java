@@ -103,21 +103,14 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.vdenotaris.spring.boot.security.saml.web.CustomSAMLBootstrap;
-import com.vdenotaris.spring.boot.security.saml.web.HttpClientWithProxy;
 import com.vdenotaris.spring.boot.security.saml.web.SAMLConfigurationBean;
+import com.vdenotaris.spring.boot.security.saml.web.SAMLConfigurationBean.SignatureAlgorithm;
 import com.vdenotaris.spring.boot.security.saml.web.core.SAMLUserDetailsServiceImpl;
  
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-	enum IDP {
-		CIRCLE, ADFS
-	}
-	private static final IDP IdpToConnect = IDP.ADFS;
-	private static boolean isADFS() {
-		return IDP.ADFS.equals(IdpToConnect);
-	}
 	private static final Logger LOG = LoggerFactory.getLogger(WebSecurityConfig.class);
 	
     @Autowired
@@ -148,11 +141,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
  
     @Bean
     public HttpClient httpClient() {
-    	if ( isADFS()) {
-    		return new HttpClient(multiThreadedHttpConnectionManager());
-    	} else {
-    		return new HttpClientWithProxy(multiThreadedHttpConnectionManager());
-    	}
+    	return new HttpClient(multiThreadedHttpConnectionManager());
     }
  
     // SAML Authentication Provider responsible for validating of received SAML
@@ -223,12 +212,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public SingleLogoutProfile logoutprofile() {
         return new SingleLogoutProfileImpl();
     }
- 
+    
     // Central storage of cryptographic keys
     @Bean
     public KeyManager keyManager() {
         DefaultResourceLoader loader = new DefaultResourceLoader();
         Resource storeFile = loader.getResource("classpath:/saml/samlKeystore.jks");
+        //ASK FOR THE DETALS
         String storePass = "nalle123";
         Map<String, String> passwords = new HashMap<String, String>();
         passwords.put("apollo", "nalle123");
@@ -281,15 +271,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public ExtendedMetadata extendedSignedMetadata() {
     	ExtendedMetadata extendedMetadata = new ExtendedMetadata();
-//    	extendedMetadata.setIdpDiscoveryEnabled(true); 
-//    	extendedMetadata.setSignMetadata(true);
     	extendedMetadata.setSignMetadata(false);
     	extendedMetadata.setSslHostnameVerification("allowAll");
     	extendedMetadata.setSigningAlgorithm("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
-    	extendedMetadata.setSigningKey("apollo");
-    	extendedMetadata.setEncryptionKey("apollo");
-    	//extendedMetadata.setSecurityProfile("metaiop");
-    	//extendedMetadata.setSslSecurityProfile("pkix");
+    	extendedMetadata.setSigningKey("adfssigning3");
+    	extendedMetadata.setEncryptionKey("adfssigning3");
+    	extendedMetadata.setSecurityProfile("metaiop");
     	return extendedMetadata;
     }
     
@@ -299,6 +286,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     	ExtendedMetadata extendedMetadata = new ExtendedMetadata();
 //    	extendedMetadata.setIdpDiscoveryEnabled(true); 
     	extendedMetadata.setSignMetadata(false);
+    	extendedMetadata.setSigningAlgorithm("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
+    	extendedMetadata.setSigningKey("adfssigning3");
+    	extendedMetadata.setEncryptionKey("adfssigning3");
+    	extendedMetadata.setSecurityProfile("metaiop");
     	return extendedMetadata;
     }
     
@@ -310,25 +301,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return idpDiscovery;
     }
     
-	@Bean
-	@Qualifier("idp-ssocircle")
-	public ExtendedMetadataDelegate ssoCircleExtendedMetadataProvider() throws MetadataProviderException {
-		Timer backgroundTaskTimer = new Timer(true);
-		ClasspathResource metadata = null;
-        try {
-            metadata = new ClasspathResource("/metadata/idp_metadata/ssoCircle_idp.xml");
-        } catch (Exception e) {
-        	LOG.error("Couldn't load ssoCircle_idp.xml.");
-        }
-		ResourceBackedMetadataProvider resourceBackedMetadataProvider = new ResourceBackedMetadataProvider(backgroundTaskTimer, metadata);
-		resourceBackedMetadataProvider.setParserPool(parserPool());
-		ExtendedMetadataDelegate extendedMetadataDelegate = new ExtendedMetadataDelegate(resourceBackedMetadataProvider, extendedMetadata());
-		extendedMetadataDelegate.setMetadataTrustCheck(false);
-		extendedMetadataDelegate.setMetadataRequireSignature(false);
-		return extendedMetadataDelegate;
-		
-	}
- 
 	@Bean
 	@Qualifier("idp-adfs")
 	public ExtendedMetadataDelegate adfsExtendedMetadataProvider() throws MetadataProviderException {
@@ -343,7 +315,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		ResourceBackedMetadataProvider resourceBackedMetadataProvider = new ResourceBackedMetadataProvider(backgroundTaskTimer, metadata);
 		resourceBackedMetadataProvider.setParserPool(parserPool());
 		
-		ExtendedMetadataDelegate extendedMetadataDelegate = new ExtendedMetadataDelegate(resourceBackedMetadataProvider, isADFS()?extendedSignedMetadata():extendedMetadata());
+		ExtendedMetadataDelegate extendedMetadataDelegate = new ExtendedMetadataDelegate(resourceBackedMetadataProvider, extendedSignedMetadata());
 		extendedMetadataDelegate.setMetadataTrustCheck(false);
 		extendedMetadataDelegate.setMetadataRequireSignature(false);
 		return extendedMetadataDelegate;
@@ -356,11 +328,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Qualifier("metadata")
     public CachingMetadataManager metadata() throws MetadataProviderException {
         List<MetadataProvider> providers = new ArrayList<MetadataProvider>();
-        if ( isADFS() ) {
-        	providers.add(adfsExtendedMetadataProvider());
-        } else {
-        	 providers.add(ssoCircleExtendedMetadataProvider());
-        }
+        providers.add(adfsExtendedMetadataProvider());
         return new CachingMetadataManager(providers);
     }
  
@@ -368,14 +336,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public MetadataGenerator metadataGenerator() {
         MetadataGenerator metadataGenerator = new MetadataGenerator();
-        if ( isADFS() ) {
-        	//metadataGenerator.setEntityId("https://dcjavaspringsaml2sample.ops1.ca-east.mybluemix.net/saml/metadata");
-        	metadataGenerator.setEntityId("https://dcjavaspringsaml2sample.ops1.ca-east.mybluemix.net");
-        	metadataGenerator.setExtendedMetadata(extendedSignedMetadata());
-        } else {
-        	metadataGenerator.setEntityId("javaSpringSaml2:TBS:CAC:EAB");
-        	metadataGenerator.setExtendedMetadata(extendedMetadata());
-        }
+        metadataGenerator.setEntityId("https://dcjavaspringsaml2sample.ops1.ca-east.mybluemix.net");
+        metadataGenerator.setExtendedMetadata(extendedSignedMetadata());
         metadataGenerator.setEntityBaseURL("https://dcjavaspringsaml2sample.ops1.ca-east.mybluemix.net");
         metadataGenerator.setIncludeDiscoveryExtension(true);
         metadataGenerator.setKeyManager(keyManager()); 
@@ -549,7 +511,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean(name = "SAMLConfigurationBean", initMethod="configureAlgorithm")
     public SAMLConfigurationBean SAMLConfigurationBean() {
     	SAMLConfigurationBean con = new SAMLConfigurationBean();
-    	con.setSignatureAlgorithm("SHA256");
+    	con.setSignatureAlgorithm(SignatureAlgorithm.SHA256);
     	return con;
     }
     

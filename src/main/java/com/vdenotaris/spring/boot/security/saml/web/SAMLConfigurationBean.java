@@ -6,9 +6,20 @@ import org.opensaml.xml.signature.SignatureConstants;
 
 public class SAMLConfigurationBean {
 	private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.SHA256;
-	public final void setSignatureAlgorithm(String s) {
+//	public final void setSignatureAlgorithm(String s) {
+//		try {
+//			signatureAlgorithm = SignatureAlgorithm.valueOf(s);
+//		} catch (RuntimeException ex) {
+//			signatureAlgorithm = SignatureAlgorithm.SHA256;
+//		}
+//	}
+	
+	public final void setSignatureAlgorithm(SignatureAlgorithm resolver) {
 		try {
-			signatureAlgorithm = SignatureAlgorithm.valueOf(s);
+			if ( resolver == null) {
+				signatureAlgorithm = SignatureAlgorithm.SHA256;
+			}
+			signatureAlgorithm = resolver;
 		} catch (RuntimeException ex) {
 			signatureAlgorithm = SignatureAlgorithm.SHA256;
 		}
