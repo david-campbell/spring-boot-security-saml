@@ -112,8 +112,24 @@ import com.vdenotaris.spring.boot.security.saml.web.core.SAMLUserDetailsServiceI
 @EnableGlobalMethodSecurity(securedEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	private static final Logger LOG = LoggerFactory.getLogger(WebSecurityConfig.class);
-	
-    @Autowired
+	public enum ENVIRONMENT {
+		UAT("dcjavaspringsaml2sample"), 
+		PROD("prodssopoc");
+		private final String applicationName;
+		private final String APP_NAME_PREFIX = ".ops1.ca-east.mybluemix.net";
+		private ENVIRONMENT(String appName) {
+			this.applicationName = appName;
+		}
+		String getAppName() {
+			return this.applicationName;
+		}
+		String getFullAppName() {
+			return (getAppName()+APP_NAME_PREFIX);
+		}
+	}
+	private final ENVIRONMENT environment = ENVIRONMENT.UAT;
+    
+	@Autowired
     private SAMLUserDetailsServiceImpl samlUserDetailsServiceImpl;
      
     // Initialization of the velocity engine
@@ -159,7 +175,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public SAMLContextProviderImpl contextProvider() {
     	SAMLContextProviderLB samlContextProviderLB  = new SAMLContextProviderLB();
     	samlContextProviderLB.setScheme("https");
-    	samlContextProviderLB.setServerName("dcjavaspringsaml2sample.ops1.ca-east.mybluemix.net");
+        samlContextProviderLB.setServerName(environment.getFullAppName());
     	samlContextProviderLB.setServerPort(443);
     	samlContextProviderLB.setIncludeServerPortInRequestURL(false);
     	samlContextProviderLB.setContextPath("/");
@@ -307,7 +323,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		Timer backgroundTaskTimer = new Timer(true);
 		ClasspathResource metadata = null;
         try {
-            metadata = new ClasspathResource("/metadata/idp_metadata/federationmetadata.xml");
+           if ( ENVIRONMENT.UAT.equals(environment)) {
+        	   metadata = new ClasspathResource("/metadata/idp_metadata/federationmetadata.xml");
+           } else {
+        	   metadata = new ClasspathResource("/metadata/idp_metadata/prod_federationmetadata.xml");
+           }
         } catch (Exception e) {
         	LOG.error("Couldn't load federationmetadata.xml.");
         }
@@ -336,9 +356,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public MetadataGenerator metadataGenerator() {
         MetadataGenerator metadataGenerator = new MetadataGenerator();
-        metadataGenerator.setEntityId("https://dcjavaspringsaml2sample.ops1.ca-east.mybluemix.net");
+        StringBuilder theURL = new StringBuilder("https://");
+        theURL.append(environment.getFullAppName());
+        metadataGenerator.setEntityId(theURL.toString());
         metadataGenerator.setExtendedMetadata(extendedSignedMetadata());
-        metadataGenerator.setEntityBaseURL("https://dcjavaspringsaml2sample.ops1.ca-east.mybluemix.net");
+        metadataGenerator.setEntityBaseURL(theURL.toString());
         metadataGenerator.setIncludeDiscoveryExtension(true);
         metadataGenerator.setKeyManager(keyManager()); 
         return metadataGenerator;
