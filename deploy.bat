@@ -1,5 +1,5 @@
 cd \
-cd C:\_BlueMix\git\spring-boot-security-saml
+cd C:\_Projects\_BlueMix\git\spring-boot-security-saml
 call mvn clean
 call mvn package -U
 cf logout
