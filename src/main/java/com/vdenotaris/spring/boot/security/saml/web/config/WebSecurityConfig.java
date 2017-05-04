@@ -23,10 +23,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 
+//import org.apache.catalina.Context;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
+//import org.apache.tomcat.util.descriptor.web.SecurityCollection;
+//import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.apache.velocity.app.VelocityEngine;
 import org.opensaml.saml2.metadata.provider.MetadataProvider;
 import org.opensaml.saml2.metadata.provider.MetadataProviderException;
@@ -39,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean;
+//import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -127,7 +131,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			return (getAppName()+APP_NAME_PREFIX);
 		}
 	}
-	private final ENVIRONMENT environment = ENVIRONMENT.UAT;
+	private final ENVIRONMENT environment = ENVIRONMENT.PROD;
     
 	@Autowired
     private SAMLUserDetailsServiceImpl samlUserDetailsServiceImpl;
@@ -545,12 +549,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      */
     @Override  
     protected void configure(HttpSecurity http) throws Exception {
-        http
-            .httpBasic()
-                .authenticationEntryPoint(samlEntryPoint());
-        http
-        	.csrf()
-        		.disable();
+        
+    	http.httpBasic().authenticationEntryPoint(samlEntryPoint());
+        
+        /*http.requiresChannel().anyRequest().requiresSecure();*/
+        
+        http.csrf().disable();
+        
         http
             .addFilterBefore(metadataGeneratorFilter(), ChannelProcessingFilter.class)
             .addFilterAfter(samlFilter(), BasicAuthenticationFilter.class);
@@ -560,9 +565,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/error").permitAll()
             .antMatchers("/saml/**").permitAll()
             .anyRequest().authenticated();
-        http
-            .logout()
-                .logoutSuccessUrl("/");
+        
+        http.logout().logoutSuccessUrl("/");
     }
  
     /**
@@ -575,5 +579,21 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(samlAuthenticationProvider());
     }   
+    
+  /*  @Bean
+    public TomcatEmbeddedServletContainerFactory tomcatEmbeddedServletContainerFactory(){
+        return new TomcatEmbeddedServletContainerFactory() {
+            @Override
+            protected void postProcessContext(Context context) {
+                SecurityConstraint securityConstraint = new SecurityConstraint();
+                securityConstraint.setUserConstraint("CONFIDENTIAL");
+                SecurityCollection collection = new SecurityCollection();
+                collection.addPattern("/*");
+                securityConstraint.addCollection(collection);
+                context.addConstraint(securityConstraint);
+            }
+        };
+    }*/
+    
 
 }
