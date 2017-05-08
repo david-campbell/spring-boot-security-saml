@@ -117,18 +117,25 @@ import com.vdenotaris.spring.boot.security.saml.web.core.SAMLUserDetailsServiceI
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	private static final Logger LOG = LoggerFactory.getLogger(WebSecurityConfig.class);
 	public enum ENVIRONMENT {
-		UAT("dcjavaspringsaml2sample"), 
-		PROD("prodssopoc");
+		UAT("dcjavaspringsaml2sample",".ops1.ca-east.mybluemix.net"), 
+		PROD("prodssopoc",".ops1.ca-east.mybluemix.net"),
+		PUBLIC_PROD("SSoPOC",".mybluemix.net");
+		
 		private final String applicationName;
-		private final String APP_NAME_PREFIX = ".ops1.ca-east.mybluemix.net";
-		private ENVIRONMENT(String appName) {
+		private final String applicationPrefix;
+		private ENVIRONMENT(String appName, String appPrefix) {
 			this.applicationName = appName;
+			this.applicationPrefix = appPrefix;
 		}
 		String getAppName() {
 			return this.applicationName;
 		}
+		String getAppPrefix() {
+			return this.applicationPrefix;
+		}
+		
 		String getFullAppName() {
-			return (getAppName()+APP_NAME_PREFIX);
+			return (getAppName()+getAppPrefix());
 		}
 	}
 	private final ENVIRONMENT environment = ENVIRONMENT.PROD;
