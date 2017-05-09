@@ -138,7 +138,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			return (getAppName()+getAppPrefix());
 		}
 	}
-	private final ENVIRONMENT environment = ENVIRONMENT.PROD;
+	private final ENVIRONMENT environment = ENVIRONMENT.PUBLIC_PROD;
     
 	@Autowired
     private SAMLUserDetailsServiceImpl samlUserDetailsServiceImpl;
