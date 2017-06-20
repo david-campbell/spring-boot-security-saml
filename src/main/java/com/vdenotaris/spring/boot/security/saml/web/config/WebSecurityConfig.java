@@ -117,15 +117,19 @@ import com.vdenotaris.spring.boot.security.saml.web.core.SAMLUserDetailsServiceI
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	private static final Logger LOG = LoggerFactory.getLogger(WebSecurityConfig.class);
 	public enum ENVIRONMENT {
-		UAT("dcjavaspringsaml2sample",".ops1.ca-east.mybluemix.net"), 
-		PROD("prodssopoc",".ops1.ca-east.mybluemix.net"),
-		PUBLIC_PROD("SSoPOC",".mybluemix.net");
+		
+		UAT("dcjavaspringsaml2sample", ".ops1.ca-east.mybluemix.net", "/metadata/idp_metadata/federationmetadata.xml"),  	// Hitting UAT from the dedicated
+		PROD("prodssopoc",".ops1.ca-east.mybluemix.net", "/metadata/idp_metadata/federationmetadata.xml"), 					// Hitting Prod from the dedicated env
+		PUBLIC_PROD("SSoPOC",".mybluemix.net", "/metadata/idp_metadata/prod_federationmetadata.xml"),						// Hitting Prod from Public env
+		PUBLIC_NEW_PROD("SSoPOC",".mybluemix.net", "/metadata/idp_metadata/new_federationmetadata.xml");					// Hitting new ADFS Prod from Public env
 		
 		private final String applicationName;
 		private final String applicationPrefix;
-		private ENVIRONMENT(String appName, String appPrefix) {
+		private final String metadataPath;
+		private ENVIRONMENT(String appName, String appPrefix, String pathToMetaData) {
 			this.applicationName = appName;
 			this.applicationPrefix = appPrefix;
+			this.metadataPath = pathToMetaData;
 		}
 		String getAppName() {
 			return this.applicationName;
@@ -133,12 +137,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		String getAppPrefix() {
 			return this.applicationPrefix;
 		}
-		
+		public String getMetadataPath() {
+			return metadataPath;
+		}		
 		String getFullAppName() {
 			return (getAppName()+getAppPrefix());
 		}
 	}
-	private final ENVIRONMENT environment = ENVIRONMENT.PUBLIC_PROD;
+	private final ENVIRONMENT environment = ENVIRONMENT.PUBLIC_NEW_PROD;
     
 	@Autowired
     private SAMLUserDetailsServiceImpl samlUserDetailsServiceImpl;
@@ -334,11 +340,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		Timer backgroundTaskTimer = new Timer(true);
 		ClasspathResource metadata = null;
         try {
-           if ( ENVIRONMENT.UAT.equals(environment)) {
-        	   metadata = new ClasspathResource("/metadata/idp_metadata/federationmetadata.xml");
-           } else {
-        	   metadata = new ClasspathResource("/metadata/idp_metadata/prod_federationmetadata.xml");
-           }
+        	metadata = new ClasspathResource(environment.getMetadataPath());
         } catch (Exception e) {
         	LOG.error("Couldn't load federationmetadata.xml.");
         }
